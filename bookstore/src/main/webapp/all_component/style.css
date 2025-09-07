@@ -1,3 +1,127 @@
-h1{
-	color:red;
+.bg-custom {
+	background-color: #ff9100;
 }
+
+.navbar .nav-item:hover .nav-link {
+	background-color:white;
+	color: #ff9100;
+	border-radius: 15px
+}
+
+
+.search-input {
+  border-radius: 12px;       
+  padding: 10px 15px;        
+  font-size: 16px;
+  border: 1px solid #ddd;   
+  color: #333;
+}
+
+
+.search-input::placeholder {
+  color: #999;               
+  font-style: italic;       
+}
+
+
+.btn-search {
+  background-color: #19747E; 
+  color: white;
+  border-radius: 10px;
+  padding: 8px 18px;
+  font-weight: 500;
+  border: none;
+}
+
+.btn-search:hover {
+  background-color: #145c63; 
+  color: #fff;
+}
+
+
+/* Card overall styles */
+.book-card {
+  border-radius: 10px;
+  overflow: hidden;
+  transition: transform .18s ease, box-shadow .18s ease;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+  border: 1px solid #eee;
+}
+
+/* hover lift */
+.book-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 14px 36px rgba(0,0,0,0.12);
+}
+
+/* Tall cover like your screenshot */
+.book-cover {
+  width: 100%;
+  height: 420px;         /* tall cover on desktop */
+  object-fit: cover;     /* crop to fill the box */
+  object-position: center;
+  display: block;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+/* Card body */
+.book-card .card-body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Title, author, price */
+.book-card .card-title {
+  font-size: 1.05rem;
+  margin-bottom: 6px;
+}
+.book-card .card-subtitle {
+  color: #6c757d;
+  font-size: 0.9rem;
+  margin-bottom: 10px;
+}
+
+/* Price and actions area stick to bottom */
+.book-card .card-actions {
+  margin-top: auto;            /* push to bottom */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Price look */
+.book-card .price {
+  font-weight: 700;
+  font-size: 1rem;
+  color: #222;
+}
+
+/* Buttons */
+.book-card .btn-add {
+  background-color: #28a745;
+  border-color: #28a745;
+  color: #fff;
+}
+.book-card .btn-add:hover {
+  background-color: #218838;
+  border-color: #1e7e34;
+}
+
+.book-card .btn-view {
+  border-color: #ced4da;
+  color: #333;
+}
+
+/* Responsive heights */
+@media (max-width: 1199px) {
+  .book-cover { height: 360px; }
+}
+@media (max-width: 991px) {
+  .book-cover { height: 300px; }
+}
+@media (max-width: 575px) {
+  .book-cover { height: 220px; }
+}
+
+
