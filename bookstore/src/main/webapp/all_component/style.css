@@ -8,14 +8,32 @@
 	border-radius: 15px
 }
 
-
 .search-input {
-  border-radius: 12px;       
-  padding: 10px 15px;        
-  font-size: 16px;
-  border: 1px solid #ddd;   
-  color: #333;
+  height: 45px;
+  font-size: 15px;
+  border-radius: 25px 0 0 25px;
+  padding: 0 20px;
+  border: 2px solid #ff9100;
 }
+
+.search-btn {
+  height: 45px;
+  font-size: 15px;
+  border-radius: 0 25px 25px 0;
+  background-color: #ff9100;   /* Orange theme */
+  border: 2px solid #ff9100;
+  color: white;
+  font-weight: bold;
+  padding: 0 20px;
+  transition: background 0.3s ease;
+}
+
+.search-btn:hover {
+  background-color: #e07e00;  /* Darker orange on hover */
+  border-color: #e07e00;
+}
+
+
 
 
 .search-input::placeholder {
@@ -24,19 +42,8 @@
 }
 
 
-.btn-search {
-  background-color: #19747E; 
-  color: white;
-  border-radius: 10px;
-  padding: 8px 18px;
-  font-weight: 500;
-  border: none;
-}
 
-.btn-search:hover {
-  background-color: #145c63; 
-  color: #fff;
-}
+
 
 
 /* Card overall styles */
