@@ -1,23 +1,16 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
          pageEncoding="UTF-8" isELIgnored="false" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ include file="all_component/allCss.jsp" %>
 
-<%@include file="all_component/allCss.jsp" %>
-    
-    <%@page isELIgnored="false" %>
 <!DOCTYPE html>
 <html>
 <head>
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<link rel="icon" type="image/png" href="<%= request.getContextPath() %>/assets/images/icon.png" />
-<meta charset="UTF-8">
-<title>Register</title>
+    <link rel="icon" type="image/png" href="<%= request.getContextPath() %>/assets/images/icon.png" />
+    <meta charset="UTF-8">
+    <title>Register</title>
 
-</head>
-<body>
-<%@include file="all_component/navbar.jsp" %>
-
-<style>
+    <style>
         body {
             background-color: #f8f9fa;
         }
@@ -55,41 +48,49 @@
     </style>
 </head>
 <body>
-
-   
+    <%@ include file="all_component/navbar.jsp" %>
 
     <div class="register-container">
         <h2>Create your account</h2>
         <p>Join Amazon Books to discover great books</p>
-        
- 
 
+        <%
+            // Use implicit session object. Read messages and then remove them so they appear only once.
+            String success = (String) session.getAttribute("successMessage");
+            String error = (String) session.getAttribute("errorMessage");
 
-<% String success = (String) request.getAttribute("successMessage");
-   String error = (String) request.getAttribute("errorMessage");
-%>
+            if (success != null) {
+                session.removeAttribute("successMessage");
+            }
+            if (error != null) {
+                session.removeAttribute("errorMessage");
+            }
+        %>
 
-<% if (success != null) { %>
-    <p class="text-center text-success"><%= success %></p>
-<% } %>
+        <% if (success != null) { %>
+            <div class="alert alert-success" role="alert">
+                <%= success %>
+            </div>
+        <% } %>
 
-<% if (error != null) { %>
-    <p class="text-center text-danger"><%= error %></p>
-<% } %>
-   
-       
-        <form action="register" method="post">
+        <% if (error != null) { %>
+            <div class="alert alert-danger" role="alert">
+                <%= error %>
+            </div>
+        <% } %>
+
+        <form action="<%= request.getContextPath() %>/register" method="post">
             <div class="form-group">
                 <label for="name">Name</label>
-                <input type="text" class="form-control" id="name" name="name" placeholder="Tony Stark" required name="name">
+                <input type="text" class="form-control" id="name" name="name" placeholder="Tony Stark" required>
             </div>
             <div class="form-group mt-3">
                 <label for="email">Email</label>
-                <input type="email" class="form-control" id="email" name="email" placeholder="IronMan@example.com" required name="email">
+                <input type="email" class="form-control" id="email" name="email" placeholder="IronMan@example.com" required>
             </div>
             <div class="form-group mt-3">
                 <label for="password">Password</label>
-                <input type="password" class="form-control" id="password" name="password" required name="password">
+                <input type="password" class="form-control" id="password" name="password" required>
             </div>
             <button type="submit" class="btn-register mt-4">Create account</button>
         </form>
@@ -99,11 +100,7 @@
         </p>
     </div>
 
-
-<br></br>
-<%@include file="all_component/footer.jsp" %>
-
+    <br/>
+    <%@ include file="all_component/footer.jsp" %>
 </body>
-
 </html>
-
