@@ -1,16 +1,21 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
-    pageEncoding="UTF-8"%>
+         pageEncoding="UTF-8" isELIgnored="false" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+
+<%@include file="all_component/allCss.jsp" %>
+    
+    <%@page isELIgnored="false" %>
 <!DOCTYPE html>
 <html>
 <head>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <link rel="icon" type="image/png" href="<%= request.getContextPath() %>/assets/images/icon.png" />
 <meta charset="UTF-8">
 <title>Register</title>
-<%@include file="all_component/allCss.jsp" %>
+
 </head>
 <body>
 <%@include file="all_component/navbar.jsp" %>
-
 
 <style>
         body {
@@ -56,19 +61,35 @@
     <div class="register-container">
         <h2>Create your account</h2>
         <p>Join Amazon Books to discover great books</p>
+        
+ 
 
-        <form action="RegisterServlet" method="post">
+
+<% String success = (String) request.getAttribute("successMessage");
+   String error = (String) request.getAttribute("errorMessage");
+%>
+
+<% if (success != null) { %>
+    <p class="text-center text-success"><%= success %></p>
+<% } %>
+
+<% if (error != null) { %>
+    <p class="text-center text-danger"><%= error %></p>
+<% } %>
+   
+       
+        <form action="register" method="post">
             <div class="form-group">
                 <label for="name">Name</label>
-                <input type="text" class="form-control" id="name" name="name" placeholder="Tony Stark" required>
+                <input type="text" class="form-control" id="name" name="name" placeholder="Tony Stark" required name="name">
             </div>
             <div class="form-group mt-3">
                 <label for="email">Email</label>
-                <input type="email" class="form-control" id="email" name="email" placeholder="IronMan@example.com" required>
+                <input type="email" class="form-control" id="email" name="email" placeholder="IronMan@example.com" required name="email">
             </div>
             <div class="form-group mt-3">
                 <label for="password">Password</label>
-                <input type="password" class="form-control" id="password" name="password" required>
+                <input type="password" class="form-control" id="password" name="password" required name="password">
             </div>
             <button type="submit" class="btn-register mt-4">Create account</button>
         </form>

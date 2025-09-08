@@ -1,3 +1,8 @@
+
+
+<%@page import="java.sql.Connection"%>
+
+<%@page import="com.DB.DBConnect"%>
 <%@ page language="java" contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"%>
 <!DOCTYPE html>
@@ -29,6 +34,10 @@
 	<%@include file="all_component/navbar.jsp" %>
 	<div class="container-fluid back-img">
 </div>
+
+<%Connection connect = DBConnect.getConnection();
+
+%>
 
 <!--  Start Recent Books -->
 <div class="container-fluid mt-4">
