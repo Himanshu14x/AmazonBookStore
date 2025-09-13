@@ -62,36 +62,18 @@ public class BooksAdd extends HttpServlet {
             }
 
             Part part = req.getPart("bimg");
-            String storedFileName = null;
-            if (part != null && part.getSize() > 0) {
-                // sanitize original filename
-                String submittedFileName = Paths.get(part.getSubmittedFileName()).getFileName().toString();
-                String ext = "";
-                int i = submittedFileName.lastIndexOf('.');
-                if (i > 0) ext = submittedFileName.substring(i);
-
-                // generate unique filename
-                storedFileName = UUID.randomUUID().toString() + ext;
-
-                // decide where to save: here we save to webapp/uploads (ensure dir exists)
-                String uploadsPath = getServletContext().getRealPath("") + File.separator + UPLOAD_DIR;
+            String storedFileName = part.getSubmittedFileName();
+            
+           
+               
+                String uploadsPath = getServletContext().getRealPath("")+"book";
+               
+                System.out.println(uploadsPath);
+                
                 File uploadsDir = new File(uploadsPath);
-                if (!uploadsDir.exists()) uploadsDir.mkdirs();
-
-                File file = new File(uploadsDir, storedFileName);
-                try (InputStream in = part.getInputStream();
-                     FileOutputStream out = new FileOutputStream(file)) {
-                    byte[] buffer = new byte[8192];
-                    int len;
-                    while ((len = in.read(buffer)) != -1) {
-                        out.write(buffer, 0, len);
-                    }
-                }
-                // storedFileName is what you'll persist (or build a URL if you serve from a path)
-            }
-
-            // Create BookDetails - adjust constructor order/types to match your class
-            // Example assumes BookDetails(id, title, author, genre, ratingStr, priceStr, imageFileName, addedBy)
+                part.write(uploadsPath+File.separator+storedFileName);
+               
+            
             BookDetails b = new BookDetails(id, title, author, genre, String.valueOf(rating), String.valueOf(price), storedFileName, "admin");
 
             // Save to DynamoDB via DAO

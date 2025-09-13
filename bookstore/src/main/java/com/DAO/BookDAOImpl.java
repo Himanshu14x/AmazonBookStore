@@ -7,6 +7,7 @@ import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.PutItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
 
+import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -15,7 +16,7 @@ public class BookDAOImpl implements BookDAO {
 
     // keep field for compatibility, but may be null -> we fall back to provider
     private DynamoDbClient dynamo;
-    private final String BOOKS_TABLE = "Books";
+    private final String BOOKS_TABLE = "amazonbooks";
 
     // keep constructor that accepts a client (for DI), but it may be null
     public BookDAOImpl(DynamoDbClient dynamo) {
@@ -80,4 +81,61 @@ public class BookDAOImpl implements BookDAO {
             return false;
         }
     }
+
+    @Override
+    public List<BookDetails> getAllBooks() {
+        List<BookDetails> books = new java.util.ArrayList<>();
+
+        try {
+            DynamoDbClient client = (this.dynamo != null) ? this.dynamo : com.DB.DynamoDBClientProvider.getClient();
+
+            // Build a scan request for the amazonbooks table
+            software.amazon.awssdk.services.dynamodb.model.ScanRequest scanRequest =
+                    software.amazon.awssdk.services.dynamodb.model.ScanRequest.builder()
+                            .tableName(BOOKS_TABLE)
+                            .build();
+
+            software.amazon.awssdk.services.dynamodb.model.ScanResponse response = client.scan(scanRequest);
+
+            for (Map<String, AttributeValue> item : response.items()) {
+                BookDetails book = new BookDetails();
+
+                // Map each attribute back into your entity
+                if (item.containsKey("bookId")) book.setId(item.get("bookId").s());
+                if (item.containsKey("title")) book.setTitle(item.get("title").s());
+                if (item.containsKey("author")) book.setAuthor(item.get("author").s());
+                if (item.containsKey("genre")) book.setGenre(item.get("genre").s());
+                if (item.containsKey("photo")) book.setPhoto(item.get("photo").s());
+                if (item.containsKey("email")) book.setEmail(item.get("email").s());
+
+                if (item.containsKey("rating")) {
+                    if (item.get("rating").n() != null) {
+                        book.setRating(item.get("rating").n());
+                    } else {
+                        book.setRating(item.get("rating").s());
+                    }
+                }
+
+                if (item.containsKey("price")) {
+                    if (item.get("price").n() != null) {
+                        book.setPrice(item.get("price").n());
+                    } else {
+                        book.setPrice(item.get("price").s());
+                    }
+                }
+
+                books.add(book);
+            }
+
+        } catch (DynamoDbException e) {
+            e.printStackTrace();
+        }
+
+        return books;
+    }
+
+    
+    
+    
+    
 }

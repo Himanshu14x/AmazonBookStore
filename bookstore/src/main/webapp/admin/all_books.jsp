@@ -1,5 +1,13 @@
+
+
+<%@page import="com.entity.BookDetails"%>
+<%@page import="java.util.List"%>
+<%@page import="com.DB.DynamoDBClientProvider"%>
+<%@page import="software.amazon.awssdk.services.dynamodb.DynamoDbClient"%>
+<%@page import="com.DAO.BookDAOImpl"%>
 <%@ page language="java" contentType="text/html; charset=UTF-8"
 	pageEncoding="UTF-8"%>
+	
 <!DOCTYPE html>
 <html>
 <head>
@@ -16,6 +24,7 @@
 		<thead class="bg-primary text-white">
 			<tr>
 				<th scope="col">ID</th>
+				<th scope="col">Image</th>
 				<th scope="col">Title</th>
 				<th scope="col">Author</th>
 				<th scope="col">Genre</th>
@@ -25,58 +34,34 @@
 			</tr>
 		</thead>
 		<tbody>
+		<%BookDAOImpl dao = new BookDAOImpl(DynamoDBClientProvider.getClient());
+	
+		List<BookDetails> list = dao.getAllBooks();
+		for(BookDetails b : list){
+			%>
+			
 			<tr>
-				<th scope="row">1</th>
-				<td>Mark</td>
-				<td>Otto</td>
-				<td>@mdo</td>
-				<td>Mark</td>
-				<td>Otto</td>
+				<td><%=b.getId() %></td>
+				<td><img src="../book/<%=b.getPhoto()%>" style="width: 50px; height:50px;" ></td>
+				<td><%=b.getTitle() %></td>
+				<td><%=b.getAuthor() %></td>
+				<td><%=b.getGenre() %></td>
+				<td><%=b.getRating() %></td>
+			    <td><%=b.getPrice() %></td>
 			
 				<td>
 				<a href="#" class="btn btn-sm btn-primary">Edit</a>
 				<a href="#" class="btn btn-sm btn-danger">Delete</a>
 				</td>
 			</tr>
-						<tr>
-				<th scope="row">1</th>
-				<td>Mark</td>
-				<td>Otto</td>
-				<td>@mdo</td>
-				<td>Mark</td>
-				<td>Otto</td>
 			
-				<td>
-				<a href="#" class="btn btn-sm btn-primary">Edit</a>
-				<a href="#" class="btn btn-sm btn-danger">Delete</a>
-				</td>
-			</tr>
-						<tr>
-				<th scope="row">1</th>
-				<td>Mark</td>
-				<td>Otto</td>
-				<td>@mdo</td>
-				<td>Mark</td>
-				<td>Otto</td>
+			<%
 			
-				<td>
-				<a href="#" class="btn btn-sm btn-primary">Edit</a>
-				<a href="#" class="btn btn-sm btn-danger">Delete</a>
-				</td>
-			</tr>
-						<tr>
-				<th scope="row">1</th>
-				<td>Mark</td>
-				<td>Otto</td>
-				<td>@mdo</td>
-				<td>Mark</td>
-				<td>Otto</td>
+		}
+		
+		  %>
 			
-				<td>
-				<a href="#" class="btn btn-sm btn-primary">Edit</a>
-				<a href="#" class="btn btn-sm btn-danger">Delete</a>
-				</td>
-			</tr>
+						
 		</tbody>
 	</table>
 	<%@include file="footer.jsp" %>
