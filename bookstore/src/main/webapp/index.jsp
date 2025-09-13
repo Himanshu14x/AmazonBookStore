@@ -1,10 +1,8 @@
 
+<%@ page import="software.amazon.awssdk.services.dynamodb.DynamoDbClient, com.DB.DynamoDBClientProvider" %>
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 
-<%@page import="java.sql.Connection"%>
 
-<%@page import="com.DB.DBConnect"%>
-<%@ page language="java" contentType="text/html; charset=UTF-8"
-    pageEncoding="UTF-8"%>
 <!DOCTYPE html>
 <html>
 <head>
@@ -12,14 +10,14 @@
     <title>Amazon</title>
 
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="<%= request.getContextPath() %>/assets/images/icon.png" />
+    <link rel="icon" type="image/png" href="<%=request.getContextPath()%>/assets/images/icon.png" />
 
     <%@include file="all_component/allCss.jsp" %>
     
   <style type="text/css">
 .back-img {
  
-  background-image: url('<%= request.getContextPath() %>/assets/images/slider1.jpg');
+  background-image: url('<%=request.getContextPath()%>/assets/images/slider1.jpg');
   height: 40vh;
   width: 100%;
   background-repeat: no-repeat;
@@ -35,8 +33,8 @@
 	<div class="container-fluid back-img">
 </div>
 
-<%Connection connect = DBConnect.getConnection();
-
+<%
+software.amazon.awssdk.services.dynamodb.DynamoDbClient connect = com.DB.DynamoDBClientProvider.getClient();
 %>
 
 <!--  Start Recent Books -->

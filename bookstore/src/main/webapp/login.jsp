@@ -1,5 +1,7 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8"
-    pageEncoding="UTF-8"%>
+
+    <%@ page language="java" contentType="text/html; charset=UTF-8"
+         pageEncoding="UTF-8" isELIgnored="false" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <!DOCTYPE html>
 <html>
 <head>
@@ -82,24 +84,23 @@
     <p class="lead">Welcome back to Amazon Books</p>
 
     <!-- show server-side message if present -->
-    <%
-      String error = (String) request.getAttribute("loginError");
-      if (error != null) {
-    %>
-      <div class="alert alert-danger" role="alert"><%= error %></div>
-    <%
-      }
-    %>
+    <c:if test="${not empty failedMsg }">
+    <h5 class="text-center text-danger">${failedMsg}</h5>
+    <c:remove var="failedMsg" scope="session" />
+</c:if>
+    
+    
+    
 
-    <form action="<%= request.getContextPath() %>/LoginServlet" method="post">
+    <form action="login" method="post">
       <div class="mb-3">
         <label for="email" class="form-label">Email</label>
-        <input id="email" name="email" type="email" class="form-control" placeholder="IronMan@example.com" required>
+        <input id="email" name="email" type="email" class="form-control" placeholder="IronMan@example.com" required name="email">
       </div>
 
       <div class="mb-3">
         <label for="password" class="form-label">Password</label>
-        <input id="password" name="password" type="password" class="form-control" required>
+        <input id="password" name="password" type="password" class="form-control" required name="password">
       </div>
 
       <div class="d-grid">

@@ -3,7 +3,7 @@ package com.user.servlet;
 import java.io.IOException;
 
 import com.DAO.userDAOImpl;
-import com.DB.DBConnect;
+import com.DB.DynamoDBClientProvider;
 import com.entity.User;
 
 import jakarta.servlet.ServletException;
@@ -34,7 +34,7 @@ public class registerServlet extends HttpServlet {
             user.setEmail(email);
             user.setPassword(password);
 
-            userDAOImpl dao = new userDAOImpl(DBConnect.getConnection());
+            userDAOImpl dao = new userDAOImpl(DynamoDBClientProvider.getClient());
             boolean success = dao.userRegister(user);
 
             HttpSession session = req.getSession();
