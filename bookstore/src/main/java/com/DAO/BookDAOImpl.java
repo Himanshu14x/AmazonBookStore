@@ -8,8 +8,9 @@ import software.amazon.awssdk.services.dynamodb.model.PutItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
 import software.amazon.awssdk.services.dynamodb.model.GetItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.GetItemResponse;
-
+import java.time.Instant;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -57,6 +58,7 @@ public class BookDAOImpl implements BookDAO {
             if (b.getPrice() != null && !b.getPrice().trim().isEmpty()) {
                 item.put("price", AttributeValue.builder().s(b.getPrice()).build());
             }
+            item.put("createdAt", AttributeValue.builder().s(Instant.now().toString()).build());
 
 
             PutItemRequest request = PutItemRequest.builder()
@@ -163,4 +165,53 @@ public class BookDAOImpl implements BookDAO {
     
     
 	}
+
+
+	@Override
+
+	public List<BookDetails> getNewBook() {
+	    List<BookDetails> books = new ArrayList<>();
+
+	    try {
+	        DynamoDbClient client = (this.dynamo != null) ? this.dynamo : DynamoDBClientProvider.getClient();
+
+	        // Scan all items
+	        software.amazon.awssdk.services.dynamodb.model.ScanRequest scanRequest =
+	                software.amazon.awssdk.services.dynamodb.model.ScanRequest.builder()
+	                        .tableName(BOOKS_TABLE)
+	                        .build();
+
+	        software.amazon.awssdk.services.dynamodb.model.ScanResponse response = client.scan(scanRequest);
+
+	        for (Map<String, AttributeValue> item : response.items()) {
+	            BookDetails book = new BookDetails();
+	            if (item.containsKey("bookId")) book.setId(item.get("bookId").s());
+	            if (item.containsKey("title")) book.setTitle(item.get("title").s());
+	            if (item.containsKey("author")) book.setAuthor(item.get("author").s());
+	            if (item.containsKey("genre")) book.setGenre(item.get("genre").s());
+	            if (item.containsKey("photo")) book.setPhoto(item.get("photo").s());
+	            if (item.containsKey("email")) book.setEmail(item.get("email").s());
+	            if (item.containsKey("rating")) book.setRating(item.get("rating").s());
+	            if (item.containsKey("price")) book.setPrice(item.get("price").s());
+	            if (item.containsKey("createdAt")) book.setCreatedAt(item.get("createdAt").s());
+	            books.add(book);
+	        }
+	        
+	        books.sort((b1, b2) -> b2.getCreatedAt().compareTo(b1.getCreatedAt()));
+
+	        // Take top 8
+	        return books.size() > 8 ? books.subList(0, 8) : books;
+	       
+
+	    } catch (DynamoDbException e) {
+	        e.printStackTrace();
+	    }
+
+	    return books; // return whatever we got
+	}
+
+	
+	
+	
+	
 }

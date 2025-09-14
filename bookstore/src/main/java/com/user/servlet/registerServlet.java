@@ -27,11 +27,13 @@ public class registerServlet extends HttpServlet {
         try {
             String name = req.getParameter("name");
             String email = req.getParameter("email");
+          
             String password = req.getParameter("password");
 
             User user = new User();
             user.setName(name);
             user.setEmail(email);
+  
             user.setPassword(password);
 
             userDAOImpl dao = new userDAOImpl(DynamoDBClientProvider.getClient());

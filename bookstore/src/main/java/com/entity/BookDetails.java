@@ -3,7 +3,7 @@ package com.entity;
 public class BookDetails {
     private String id, title, author, genre, photo, email;
     private String rating, price;
-
+    private String createdAt;
     public BookDetails() {
 
     }
@@ -47,7 +47,9 @@ public class BookDetails {
     public String getPhoto() {
     	return photo;
     }
-
+    public String getCreatedAt() {
+        return createdAt;
+    }
 	public void setId(String id) {
 		this.id = id;
 	}
@@ -84,6 +86,9 @@ public class BookDetails {
 
 	public void setEmail(String email) {
 		this.email = email;
+	}
+	public void setCreatedAt(String createdAt) {
+	    this.createdAt = createdAt;
 	}
 
 	@Override

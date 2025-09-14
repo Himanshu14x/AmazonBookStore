@@ -15,7 +15,7 @@ import java.util.Map;
 public class userDAOImpl implements userDAO{
 
 	private DynamoDbClient dynamo;
-	private final String USERS_TABLE = "Users";
+	private final String USERS_TABLE = "amazonUsers";
 
 	public userDAOImpl(DynamoDbClient dynamo) {
 		this.dynamo = dynamo;
@@ -25,8 +25,7 @@ public class userDAOImpl implements userDAO{
 	public boolean userRegister(User user) {
 		try {
 			Map<String, AttributeValue> item = new HashMap<>();
-			// Use email as primary key (partition key). If you want numeric id, generate
-			// one.
+			
 			item.put("email", AttributeValue.builder().s(user.getEmail()).build());
 			item.put("name", AttributeValue.builder().s(user.getName()).build());
 			item.put("password", AttributeValue.builder().s(user.getPassword()).build());

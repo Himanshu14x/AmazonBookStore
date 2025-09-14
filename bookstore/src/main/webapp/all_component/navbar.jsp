@@ -55,10 +55,10 @@
 					class="fas fa-home"></i>Home<span class="sr-only">(current)</span></a>
 			</li>
 			
-			<li class="nav-item active"><a class="nav-link" href="#">Recent
+			<li class="nav-item active"><a class="nav-link" href="recent_books.jsp">Recent
 					Books</a></li>
 			<li class="nav-item active"><a class="nav-link disabled"
-				href="#">Recommended Books</a></li>
+				href="recommended_books.jsp">Recommended Books</a></li>
 		</ul>
 
 

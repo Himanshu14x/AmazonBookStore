@@ -31,7 +31,7 @@
 
 
 			<c:if test="${not empty userobj}">
-				<a href="../login.jsp" class="btn btn-primary mr-2"> <i
+				<a class="btn btn-primary text-white mr-2"> <i
 					class="fas fa-user"></i> ${userobj.name }
 				</a>
 					<a data-toggle="modal" data-target="#exampleModal" class="btn btn-success"> <i
