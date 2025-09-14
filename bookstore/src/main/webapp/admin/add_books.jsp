@@ -2,9 +2,11 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
 	pageEncoding="UTF-8" isELIgnored="false"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+
 <!DOCTYPE html>
 <html>
 <head>
+
 <meta charset="UTF-8">
 <title>Admin: add books</title>
 <link rel="icon" type="image/png"
@@ -13,12 +15,18 @@
 </head>
 <body style="background-color: #f0f2f2">
 	<%@include file="navbar.jsp"%>
+		<c:if test="${empty userobj }">
+	
+	<c:redirect url="../login.jsp"/>
+	
+	</c:if>
 
 	<div class="container">
 		<div class="row">
 			<div class="col-md-4 offset-md-4">
 				<div class="card">
 					<div class="card-body">
+					
 						<h4 class="text-center">Add Books</h4>
 						<c:if test="${not empty SuccessMsg }">
 							<p class="text-center text-primary">${SuccessMsg }</p>

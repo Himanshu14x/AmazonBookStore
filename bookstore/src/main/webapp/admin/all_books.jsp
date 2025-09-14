@@ -8,6 +8,8 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
 	pageEncoding="UTF-8"%>
 	
+	
+	
 <!DOCTYPE html>
 <html>
 <head>
@@ -16,9 +18,22 @@
 <link rel="icon" type="image/png"
 	href="<%=request.getContextPath()%>/assets/images/icon.png" />
 <%@include file="allCss.jsp"%>
+
 </head>
 <body>
+
+
+<style>
+.table td, .table th {
+    vertical-align: middle !important;
+}
+</style>
 	<%@include file="navbar.jsp"%>
+		<c:if test="${empty userobj }">
+	
+	<c:redirect url="../login.jsp"/>
+	
+	</c:if>
 	<h3 class="text-center">All Books</h3>
 	<table class="table table-striped">
 		<thead class="bg-primary text-white">
@@ -30,7 +45,7 @@
 				<th scope="col">Genre</th>
 				<th scope="col">Rating</th>
 				<th scope="col">Price</th>
-				<th scope="col">Action</th>
+				
 			</tr>
 		</thead>
 		<tbody>
@@ -42,17 +57,14 @@
 			
 			<tr>
 				<td><%=b.getId() %></td>
-				<td><img src="../book/<%=b.getPhoto()%>" style="width: 50px; height:50px;" ></td>
+				<td><img src="../book/<%=b.getPhoto()%>" style="width: 60px; height:90px;" ></td>
 				<td><%=b.getTitle() %></td>
 				<td><%=b.getAuthor() %></td>
 				<td><%=b.getGenre() %></td>
 				<td><%=b.getRating() %></td>
 			    <td><%=b.getPrice() %></td>
 			
-				<td>
-				<a href="#" class="btn btn-sm btn-primary">Edit</a>
-				<a href="#" class="btn btn-sm btn-danger">Delete</a>
-				</td>
+			
 			</tr>
 			
 			<%

@@ -7,6 +7,7 @@
 <title>Admin: Home</title>
 <link rel="icon" type="image/png" href="<%= request.getContextPath() %>/assets/images/icon.png" />
 <%@include file="/admin/allCss.jsp"%>
+
 <style type="text/css">
 a{
 text-decoration:none;
@@ -22,10 +23,17 @@ color:black;
 </head>
 <body>
 	<%@include file="navbar.jsp"%>
+	
+	
+	<c:if test="${empty userobj }">
+	
+	<c:redirect url="../login.jsp"/>
+	
+	</c:if>
 
 	<div class="container">
 		<div class="row p-5">
-			<div class="col-md-3">
+			<div class="col-md-4">
 			<a href="add_books.jsp">
 				<div class="card">
 					<div class="card-body text-center">
@@ -39,7 +47,7 @@ color:black;
 
 			</div>
 			
-			<div class="col-md-3">
+			<div class="col-md-4">
 			<a href="all_books.jsp">
 				<div class="card">
 					<div class="card-body text-center">
@@ -53,7 +61,7 @@ color:black;
 
 			</div>
 			
-			<div class="col-md-3">
+			<div class="col-md-4">
 			<a href="orders.jsp">
 				<div class="card">
 					<div class="card-body text-center">
@@ -67,23 +75,20 @@ color:black;
 
 			</div>
 			
-			<div class="col-md-3">
-				<div class="card">
-					<div class="card-body text-center">
-						<i class="fas fa-sign-out-alt fa-3x text-primary"></i><br>
-						<h4>Logout</h4>
-						-----------------
-					</div>
-
-				</div>
-
-			</div>
+		
 
 		</div>
 
 
 	</div>
-
+	
+	
+<br></br>
+<br></br>
+<br></br>
+<br></br>
+<br></br>
+<br></br>
 <div style="margin-top:182px"><%@include file="footer.jsp" %></div>
 
 

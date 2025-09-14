@@ -11,4 +11,6 @@ public interface BookDAO {
 	
 	boolean addBooks(BookDetails b);
 	List<BookDetails> getAllBooks();
+	
+	BookDetails getBookById(String id);
 }

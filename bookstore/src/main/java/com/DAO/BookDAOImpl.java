@@ -6,6 +6,8 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.PutItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
+import software.amazon.awssdk.services.dynamodb.model.GetItemRequest;
+import software.amazon.awssdk.services.dynamodb.model.GetItemResponse;
 
 import java.util.List;
 import java.util.HashMap;
@@ -14,16 +16,16 @@ import java.util.UUID;
 
 public class BookDAOImpl implements BookDAO {
 
-    // keep field for compatibility, but may be null -> we fall back to provider
+  
     private DynamoDbClient dynamo;
     private final String BOOKS_TABLE = "amazonbooks";
 
-    // keep constructor that accepts a client (for DI), but it may be null
+ 
     public BookDAOImpl(DynamoDbClient dynamo) {
         this.dynamo = dynamo;
     }
 
-    // convenience no-arg constructor that always uses provider
+  
     public BookDAOImpl() {
         this.dynamo = null;
     }
@@ -33,8 +35,8 @@ public class BookDAOImpl implements BookDAO {
         try {
             DynamoDbClient client = (this.dynamo != null) ? this.dynamo : com.DB.DynamoDBClientProvider.getClient();
 
-            // Ensure partition key "bookId" exists (table's key is "bookId" per describe-table)
-            String bookId = b.getId(); // assuming your entity uses getId(); adjust if it's getBookId()
+           
+            String bookId = b.getId(); 
             if (bookId == null || bookId.trim().isEmpty()) {
                 bookId = UUID.randomUUID().toString();
                 System.out.println("BookDAOImpl: generated bookId = " + bookId);
@@ -50,21 +52,12 @@ public class BookDAOImpl implements BookDAO {
             if (b.getEmail() != null) item.put("email", AttributeValue.builder().s(b.getEmail()).build());
 
             if (b.getRating() != null && !b.getRating().trim().isEmpty()) {
-                try {
-                    Double.parseDouble(b.getRating());
-                    item.put("rating", AttributeValue.builder().n(b.getRating()).build());
-                } catch (NumberFormatException nfe) {
-                    item.put("rating", AttributeValue.builder().s(b.getRating()).build());
-                }
+                item.put("rating", AttributeValue.builder().s(b.getRating()).build());
             }
             if (b.getPrice() != null && !b.getPrice().trim().isEmpty()) {
-                try {
-                    Double.parseDouble(b.getPrice());
-                    item.put("price", AttributeValue.builder().n(b.getPrice()).build());
-                } catch (NumberFormatException nfe) {
-                    item.put("price", AttributeValue.builder().s(b.getPrice()).build());
-                }
+                item.put("price", AttributeValue.builder().s(b.getPrice()).build());
             }
+
 
             PutItemRequest request = PutItemRequest.builder()
                     .tableName(BOOKS_TABLE)
@@ -107,22 +100,9 @@ public class BookDAOImpl implements BookDAO {
                 if (item.containsKey("genre")) book.setGenre(item.get("genre").s());
                 if (item.containsKey("photo")) book.setPhoto(item.get("photo").s());
                 if (item.containsKey("email")) book.setEmail(item.get("email").s());
+                if (item.containsKey("rating")) book.setRating(item.get("rating").s());
+                if (item.containsKey("price")) book.setPrice(item.get("price").s());
 
-                if (item.containsKey("rating")) {
-                    if (item.get("rating").n() != null) {
-                        book.setRating(item.get("rating").n());
-                    } else {
-                        book.setRating(item.get("rating").s());
-                    }
-                }
-
-                if (item.containsKey("price")) {
-                    if (item.get("price").n() != null) {
-                        book.setPrice(item.get("price").n());
-                    } else {
-                        book.setPrice(item.get("price").s());
-                    }
-                }
 
                 books.add(book);
             }
@@ -134,8 +114,53 @@ public class BookDAOImpl implements BookDAO {
         return books;
     }
 
+	@Override
+	public BookDetails getBookById(String id) {
+		
+		  BookDetails bookDetails = null;
+
+		    try {
+		    	
+
+		        Map<String, AttributeValue> key = Map.of(
+		            "bookId", AttributeValue.builder().s(id).build()
+		        );
+
+		        GetItemRequest getReq = GetItemRequest.builder()
+		                .tableName(BOOKS_TABLE)
+		                .key(key)
+		                .build();
+
+		        GetItemResponse resp = dynamo.getItem(getReq);
+
+		        Map<String, AttributeValue> item = resp.item();
+		        if (item == null || item.isEmpty()) {
+		            return null; // not found
+		        }
+
+		     
+		        bookDetails = new BookDetails();
+		        // set the ID (use same attribute name you used above)
+		        bookDetails.setId(item.containsKey("bookId") ? item.get("bookId").s() : id);
+
+		        if (item.containsKey("title")) bookDetails.setTitle(item.get("title").s());
+		        if (item.containsKey("author")) bookDetails.setAuthor(item.get("author").s());
+		        if (item.containsKey("genre")) bookDetails.setGenre(item.get("genre").s());
+		        if (item.containsKey("photo")) bookDetails.setPhoto(item.get("photo").s());
+		        if (item.containsKey("email")) bookDetails.setEmail(item.get("email").s());
+		        if (item.containsKey("rating")) bookDetails.setRating(item.get("rating").s());
+		        if (item.containsKey("price")) bookDetails.setPrice(item.get("price").s());
+		 
+
+		    } catch (DynamoDbException e) {
+		        e.printStackTrace();
+		        // handle or rethrow as needed
+		    } catch (Exception e) {
+		        e.printStackTrace();
+		    }
+
+		    return bookDetails;
     
     
-    
-    
+	}
 }

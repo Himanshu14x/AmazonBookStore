@@ -84,8 +84,14 @@
     <p class="lead">Welcome back to Amazon Books</p>
 
     <!-- show server-side message if present -->
-    <c:if test="${not empty failedMsg }">
-    <h5 class="text-center text-danger">${failedMsg}</h5>
+<c:if test="${not empty sessionScope.successMsg1}">
+    <h5 class="text-center text-success">${sessionScope.successMsg1}</h5>
+    <c:remove var="successMsg1" scope="session" />
+</c:if>
+
+
+    <c:if test="${not empty successMsg1 }">
+    <h5 class="text-center text-success">${successMsg1}</h5>
     <c:remove var="failedMsg" scope="session" />
 </c:if>
     
