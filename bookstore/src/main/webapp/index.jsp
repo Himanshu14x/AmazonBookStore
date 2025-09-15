@@ -1,5 +1,6 @@
 
 <%@page import="com.entity.BookDetails"%>
+<%@page import="com.entity.User"%>
 <%@page import="com.DAO.BookDAOImpl"%>
 <%@ page import="software.amazon.awssdk.services.dynamodb.DynamoDbClient, com.DB.DynamoDBClientProvider" %>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
@@ -34,6 +35,8 @@
 <body>
 	<%@include file="all_component/navbar.jsp" %>
 	<div class="container-fluid back-img">
+	<% User u = (User)session.getAttribute("userobj"); %>
+	
 </div>
 
 <%
@@ -42,7 +45,7 @@ software.amazon.awssdk.services.dynamodb.DynamoDbClient connect = com.DB.DynamoD
 
 <!--  Start Recent Books -->
 <div class="container-fluid mt-4">
-  <h3 class="text-center mb-4">Recent Books</h3>
+  <h3 class="text-center mb-4">Featured Books</h3>
 
   <div class="row">
     <!-- Book 1 -->
@@ -68,13 +71,36 @@ software.amazon.awssdk.services.dynamodb.DynamoDbClient connect = com.DB.DynamoD
             <div class="price">&#8377; <%=b.getPrice() %></div>
 
             <div class="btn-group btn-group-sm" role="group">
-              <form action="cart/add" method="post" style="display:inline;">
-                <input type="hidden" name="productId" value="1">
-                <input type="hidden" name="qty" value="1">
-                <button type="submit" class="btn btn-success btn-sm">
-                  <i class="fa fa-shopping-cart"></i> Add
-                </button>
-              </form>
+            
+            
+            
+      <form action="<%= request.getContextPath() %>/cart/add" method="post" style="display:inline;">
+  <input type="hidden" name="productId" value="<%= b.getId() %>" />
+  <input type="hidden" name="qty" value="1" />
+
+  <%
+    if (u == null) {
+  %>
+    <!-- not logged in: show a link to login page instead of submitting the cart form -->
+    <a href="<%= request.getContextPath() %>/login.jsp" class="btn btn-success btn-sm">
+      <i class="fa fa-shopping-cart"></i> Add
+    </a>
+  <%
+    } else {
+  %>
+    <!-- logged in: show submit button that posts to /cart/add -->
+    <button type="submit" class="btn btn-success btn-sm">
+      <i class="fa fa-shopping-cart"></i> Add
+    </button>
+  <%
+    }
+  %>
+</form>
+              
+              
+              
+              
+              
               <a class="btn btn-outline-secondary btn-sm" href="view_books.jsp?bid=<%=b.getId()%>">View</a>
             </div>
           </div>

@@ -144,15 +144,7 @@
         </div>
       </div>
 
-      <!-- Extra description block -->
-      <div class="row mt-4">
-        <div class="col-12">
-          <div class="product-panel">
-            <h5>More about this book</h5>
-            <p class="small-muted">Long description or details could go here.</p>
-          </div>
-        </div>
-      </div>
+   
 
     <%
       } // end else b != null
