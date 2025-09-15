@@ -1,9 +1,13 @@
 <%@ page import="com.DB.DynamoDBClientProvider" %>
 <%@ page import="com.DAO.BookDAOImpl" %>
+<%@ page import="com.entity.User" %>
 <%@ page import="com.entity.BookDetails" %>
+<%@ page import="software.amazon.awssdk.services.dynamodb.model.AttributeValue" %>
+<%@ page import="software.amazon.awssdk.services.dynamodb.model.GetItemRequest" %>
+<%@ page import="software.amazon.awssdk.services.dynamodb.model.GetItemResponse" %>
 <%@ page import="software.amazon.awssdk.services.dynamodb.DynamoDbClient" %>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-
+<%@ page import="java.util.*" %>
 <!doctype html>
 <html lang="en">
 <head>
@@ -40,7 +44,70 @@
             e.printStackTrace();
         }
     }
+    
   %>
+  
+  
+  <%
+    // --- record recent view for logged-in user (robust version with debug prints) ---
+    User sessionUser = (User) session.getAttribute("userobj");
+    if (sessionUser != null && b != null) {
+        String email = sessionUser.getEmail();
+        String bookId = b.getId();
+        if (email != null && !email.trim().isEmpty() && bookId != null && !bookId.trim().isEmpty()) {
+            try {
+                System.out.println("[view_books.jsp] user logged in: " + email + " viewing book: " + bookId);
+
+                software.amazon.awssdk.services.dynamodb.DynamoDbClient client = com.DB.DynamoDBClientProvider.getClient();
+                com.DAO.userDAOImpl udao = new com.DAO.userDAOImpl(client);
+
+                boolean added = udao.addRecentViewed(email, bookId);
+                System.out.println("[view_books.jsp] addRecentViewed returned: " + added);
+
+                // fetch user item back and print recentViewed for debug
+                try {
+                    java.util.Map<String, software.amazon.awssdk.services.dynamodb.model.AttributeValue> key = new java.util.HashMap<>();
+                    key.put("email", AttributeValue.builder().s(email).build());
+                    GetItemRequest gir = GetItemRequest.builder().tableName("amazonUsers").key(key).build();
+                    GetItemResponse gres = client.getItem(gir);
+                    if (gres != null && gres.hasItem()) {
+                        if (gres.item().containsKey("recentViewed")) {
+                            System.out.println("[view_books.jsp] recentViewed attribute after update: " + gres.item().get("recentViewed"));
+                        } else {
+                            System.out.println("[view_books.jsp] recentViewed attribute NOT found on user item.");
+                        }
+                    } else {
+                        System.out.println("[view_books.jsp] user item not found in amazonUsers for email: " + email);
+                    }
+                } catch (Exception ex2) {
+                    ex2.printStackTrace();
+                }
+
+            } catch (Exception e) {
+                System.out.println("[view_books.jsp] ERROR calling addRecentViewed:");
+                e.printStackTrace();
+            }
+        } else {
+            System.out.println("[view_books.jsp] session user email or bookId empty: email=" + email + " bookId=" + bookId);
+        }
+    } else {
+        // not logged in or book null; no-op
+    }
+
+    // --- recommendations (unchanged) ---
+    List<BookDetails> recs = new ArrayList<>();
+    try {
+        DynamoDbClient client = DynamoDBClientProvider.getClient();
+        com.DAO.BookDAOImpl bookDao = new com.DAO.BookDAOImpl(client);
+        if (b != null && b.getGenre() != null && !b.getGenre().trim().isEmpty()) {
+        	recs = bookDao.getRecommendedByGenre(b.getGenre(), 4.0, 5, b.getId());
+
+        }
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+%>
+  
 
   <div class="container mt-4 mb-5">
     <%
@@ -144,6 +211,24 @@
         </div>
       </div>
 
+   <div class="mt-4">
+  <h5>Recommended for you</h5>
+  <div class="row">
+    <%
+      for (BookDetails rb : recs) {
+    %>
+      <div class="col-lg-2 col-md-3 col-6 text-center mb-3">
+        <a href="view_books.jsp?bid=<%= rb.getId() %>">
+          <img src="<%= request.getContextPath() %>/book/<%= rb.getPhoto() %>" style="width:100%;height:150px;object-fit:cover;" onerror="this.src='<%= request.getContextPath() %>/assets/images/icon.png'"/>
+          <div class="small"><%= rb.getTitle() %></div>
+          <div class="small-muted">₹<%= rb.getPrice() %></div>
+        </a>
+      </div>
+    <%
+      }
+    %>
+  </div>
+</div>
    
 
     <%

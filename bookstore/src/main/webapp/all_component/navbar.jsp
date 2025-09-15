@@ -85,7 +85,7 @@
 
             <% if (user != null) { %>
                 <li class="nav-item"><a class="nav-link" href="<%= request.getContextPath() %>/recent_books.jsp">Recent Books</a></li>
-                <li class="nav-item"><a class="nav-link" href="<%= request.getContextPath() %>/recommended_books.jsp">Recommended Books</a></li>
+                
             <% } %>
         </ul>
 

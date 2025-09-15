@@ -1,6 +1,9 @@
 package com.cart.servlet;
 
+import com.DAO.userDAOImpl;
+import com.DB.DynamoDBClientProvider;
 import com.entity.User;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
@@ -14,26 +17,30 @@ public class CartAddServlet extends HttpServlet {
         User user = null;
         if (session != null) user = (User) session.getAttribute("userobj");
 
-        // If not logged in, redirect to login page. Optionally save target to return after login.
         if (user == null) {
-            // Save attempted action so you can redirect back after login (optional)
-            String redirectAfter = req.getContextPath() + "/view_books.jsp?bid=" + req.getParameter("productId");
-            req.getSession(true).setAttribute("afterLoginRedirect", redirectAfter);
-
+            // redirect to login if not logged in
             resp.sendRedirect(req.getContextPath() + "/login.jsp");
             return;
         }
 
-        // At this point user is authenticated — handle add to cart logic
         String productId = req.getParameter("productId");
         String qtyStr = req.getParameter("qty");
         int qty = 1;
         try { qty = Integer.parseInt(qtyStr); } catch (Exception ignored) {}
 
-        // TODO: your existing cart logic here (add item to session/cart table)
-        // Example: Cart cart = (Cart) session.getAttribute("cart"); cart.add(productId, qty);
+        try {
+            DynamoDbClient client = DynamoDBClientProvider.getClient();
+            userDAOImpl udao = new userDAOImpl(client);
+            boolean ok = udao.addToCart(user.getEmail(), productId, qty);
+            // optional: set success message in session
+            if (ok) session.setAttribute("successMsg", "Added to cart");
+            else session.setAttribute("failedMsg", "Could not add to cart");
+        } catch (Exception e) {
+            e.printStackTrace();
+            session.setAttribute("failedMsg", "Error adding to cart");
+        }
 
         // Redirect back to cart or product page
-        resp.sendRedirect(req.getContextPath() + "/cart.jsp"); // or wherever you want
+        resp.sendRedirect(req.getContextPath() + "/cart.jsp");
     }
 }

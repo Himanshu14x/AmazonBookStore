@@ -209,6 +209,72 @@ public class BookDAOImpl implements BookDAO {
 
 	    return books; // return whatever we got
 	}
+	
+	// returns top N books matching given genre and rating >= minRating (rating stored as string in DB)
+	public List<BookDetails> getRecommendedByGenre(String genre, double minRating, int limit, String excludeBookId) {
+	    List<BookDetails> books = new ArrayList<>();
+	    try {
+	        DynamoDbClient client = (this.dynamo != null) ? this.dynamo : com.DB.DynamoDBClientProvider.getClient();
+
+	        // build expression: genre = :gval AND rating >= :rval
+	        Map<String, String> exprNames = new HashMap<>();
+	        exprNames.put("#g", "genre");
+	        exprNames.put("#r", "rating");
+
+	        Map<String, AttributeValue> exprValues = new HashMap<>();
+	        exprValues.put(":gval", AttributeValue.builder().s(genre).build());
+	        exprValues.put(":rval", AttributeValue.builder().s(Double.toString(minRating)).build());
+
+	        software.amazon.awssdk.services.dynamodb.model.ScanRequest scanRequest =
+	                software.amazon.awssdk.services.dynamodb.model.ScanRequest.builder()
+	                        .tableName(BOOKS_TABLE)
+	                        .filterExpression("#g = :gval AND #r >= :rval")
+	                        .expressionAttributeNames(exprNames)
+	                        .expressionAttributeValues(exprValues)
+	                        .build();
+
+	        software.amazon.awssdk.services.dynamodb.model.ScanResponse response = client.scan(scanRequest);
+
+	        for (Map<String, AttributeValue> item : response.items()) {
+	            // skip if the item doesn't have a bookId or it's equal to excludeBookId
+	            String thisBookId = item.containsKey("bookId") && item.get("bookId").s() != null ? item.get("bookId").s() : null;
+	            if (excludeBookId != null && excludeBookId.equals(thisBookId)) {
+	                continue; // do not include currently viewed book
+	            }
+
+	            BookDetails book = new BookDetails();
+	            if (item.containsKey("bookId")) book.setId(item.get("bookId").s());
+	            if (item.containsKey("title")) book.setTitle(item.get("title").s());
+	            if (item.containsKey("author")) book.setAuthor(item.get("author").s());
+	            if (item.containsKey("genre")) book.setGenre(item.get("genre").s());
+	            if (item.containsKey("photo")) book.setPhoto(item.get("photo").s());
+	            if (item.containsKey("email")) book.setEmail(item.get("email").s());
+	            if (item.containsKey("rating")) book.setRating(item.get("rating").s());
+	            if (item.containsKey("price")) book.setPrice(item.get("price").s());
+	            books.add(book);
+	        }
+
+	        // sort by rating descending (rating stored as string)
+	        books.sort((b1, b2) -> {
+	            double r1 = 0, r2 = 0;
+	            try { r1 = Double.parseDouble(b1.getRating()); } catch (Exception ignored) {}
+	            try { r2 = Double.parseDouble(b2.getRating()); } catch (Exception ignored) {}
+	            return Double.compare(r2, r1);
+	        });
+
+	        // return up to limit
+	        if (books.size() > limit) {
+	            return new ArrayList<>(books.subList(0, limit));
+	        } else {
+	            return books;
+	        }
+
+	    } catch (DynamoDbException e) {
+	        e.printStackTrace();
+	    }
+	    return books;
+	}
+
 
 	
 	

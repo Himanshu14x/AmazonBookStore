@@ -8,9 +8,15 @@ import software.amazon.awssdk.services.dynamodb.model.GetItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.ScanRequest;
 import software.amazon.awssdk.services.dynamodb.model.ScanResponse;
 import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
+import software.amazon.awssdk.services.dynamodb.model.GetItemResponse;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.UpdateItemRequest;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class userDAOImpl implements userDAO{
 
@@ -101,4 +107,159 @@ public class userDAOImpl implements userDAO{
 		}
 		return users;
 	}
+	
+	
+	// -- get recent viewed bookIds for a user (returns List<String>)
+	public List<String> getRecentViewed(String email) {
+	    try {
+	        Map<String, AttributeValue> key = new HashMap<>();
+	        key.put("email", AttributeValue.builder().s(email).build());
+	        GetItemRequest request = GetItemRequest.builder().tableName(USERS_TABLE).key(key).build();
+	        GetItemResponse resp = dynamo.getItem(request);
+	        if (resp.hasItem() && resp.item().containsKey("recentViewed")) {
+	            List<AttributeValue> list = resp.item().get("recentViewed").l();
+	            List<String> out = new ArrayList<>();
+	            for (AttributeValue av : list) {
+	                out.add(av.s());
+	            }
+	            return out;
+	        }
+	    } catch (DynamoDbException e) {
+	        e.printStackTrace();
+	    }
+	    return new ArrayList<>();
+	}
+
+	// -- add a bookId to front of recentViewed; keep uniqueness & max 10
+	// Add/update recentViewed for a user: keep newest-first, unique, max 10
+	public boolean addRecentViewed(String email, String bookId) {
+	    if (email == null || email.trim().isEmpty() || bookId == null || bookId.trim().isEmpty()) {
+	        System.out.println("[userDAOImpl] addRecentViewed: invalid email or bookId");
+	        return false;
+	    }
+	    final String USERS_TABLE = "amazonUsers"; // adjust if your constant differs
+	    try {
+	        // 1) Fetch the existing user item
+	        Map<String, AttributeValue> key = new HashMap<>();
+	        key.put("email", AttributeValue.builder().s(email).build());
+	        GetItemRequest gir = GetItemRequest.builder().tableName(USERS_TABLE).key(key).build();
+	        GetItemResponse gres = dynamo.getItem(gir);
+
+	        Map<String, AttributeValue> fetched = gres.item();
+	        if (fetched == null || fetched.isEmpty()) {
+	            System.out.println("[userDAOImpl] addRecentViewed: user item not found for " + email);
+	            return false;
+	        }
+
+	        // 2) Copy into a mutable map (IMPORTANT: GetItemResponse.item() returns an unmodifiable Map)
+	        Map<String, AttributeValue> userItem = new HashMap<>(fetched);
+
+	        // 3) Read existing recentViewed (if any)
+	        List<String> current = new ArrayList<>();
+	        if (userItem.containsKey("recentViewed") && userItem.get("recentViewed").l() != null) {
+	            List<AttributeValue> avList = userItem.get("recentViewed").l();
+	            for (AttributeValue av : avList) {
+	                if (av.s() != null) current.add(av.s());
+	            }
+	        }
+
+	        // 4) Update list: move bookId to front, ensure uniqueness and limit 10
+	        current.removeIf(x -> x.equals(bookId));
+	        current.add(0, bookId);
+	        if (current.size() > 10) {
+	            current = current.subList(0, 10);
+	        }
+
+	        // 5) Convert back to AttributeValue list and put in userItem
+	        List<AttributeValue> newAvList = current.stream()
+	                .map(s -> AttributeValue.builder().s(s).build())
+	                .collect(Collectors.toList());
+	        userItem.put("recentViewed", AttributeValue.builder().l(newAvList).build());
+
+	        // 6) Write updated item back to DynamoDB
+	        PutItemRequest pir = PutItemRequest.builder().tableName(USERS_TABLE).item(userItem).build();
+	        dynamo.putItem(pir);
+
+	        System.out.println("[userDAOImpl] addRecentViewed: updated recentViewed for " + email + " -> " + current);
+	        return true;
+
+	    } catch (DynamoDbException e) {
+	        System.out.println("[userDAOImpl] addRecentViewed: DynamoDbException");
+	        e.printStackTrace();
+	    } catch (Exception ex) {
+	        System.out.println("[userDAOImpl] addRecentViewed: Exception");
+	        ex.printStackTrace();
+	    }
+	    return false;
+	}
+
+
+	// -- cart methods: getCart stored as a map of bookId -> quantity (numbers stored as strings here)
+	public Map<String, String> getCart(String email) {
+	    try {
+	        Map<String, AttributeValue> key = new HashMap<>();
+	        key.put("email", AttributeValue.builder().s(email).build());
+	        GetItemResponse resp = dynamo.getItem(GetItemRequest.builder().tableName(USERS_TABLE).key(key).build());
+	        if (resp.hasItem() && resp.item().containsKey("cart")) {
+	            Map<String, AttributeValue> avalmap = resp.item().get("cart").m();
+	            Map<String, String> out = new HashMap<>();
+	            for (Map.Entry<String, AttributeValue> e : avalmap.entrySet()) {
+	                out.put(e.getKey(), e.getValue().n()); // using number as string
+	            }
+	            return out;
+	        }
+	    } catch (DynamoDbException e) {
+	        e.printStackTrace();
+	    }
+	    return new HashMap<>();
+	}
+
+	// add or increment quantity for bookId in cart
+	public boolean addToCart(String email, String bookId, int qtyToAdd) {
+	    try {
+	        Map<String, String> cart = getCart(email);
+	        int currentQty = 0;
+	        if (cart.containsKey(bookId)) {
+	            try { currentQty = Integer.parseInt(cart.get(bookId)); } catch (Exception ignored) {}
+	        }
+	        cart.put(bookId, Integer.toString(currentQty + qtyToAdd));
+
+	        // convert to AttributeValue map
+	        Map<String, AttributeValue> m = new HashMap<>();
+	        for (Map.Entry<String, String> e : cart.entrySet()) {
+	            m.put(e.getKey(), AttributeValue.builder().n(e.getValue()).build());
+	        }
+
+	        // fetch full user item, update cart, put
+	        Map<String, AttributeValue> key = new HashMap<>();
+	        key.put("email", AttributeValue.builder().s(email).build());
+	        GetItemResponse resp = dynamo.getItem(GetItemRequest.builder().tableName(USERS_TABLE).key(key).build());
+	        Map<String, AttributeValue> userItem = resp.item();
+	     
+	        userItem.put("cart", AttributeValue.builder().m(m).build());
+	        dynamo.putItem(builder -> builder.tableName(USERS_TABLE).item(userItem));
+	        return true;
+	    } catch (DynamoDbException e) {
+	        e.printStackTrace();
+	    }
+	    return false;
+	}
+
+	// clear cart on order placed
+	public boolean clearCart(String email) {
+	    try {
+	        Map<String, AttributeValue> key = new HashMap<>();
+	        key.put("email", AttributeValue.builder().s(email).build());
+	        GetItemResponse resp = dynamo.getItem(GetItemRequest.builder().tableName(USERS_TABLE).key(key).build());
+	        Map<String, AttributeValue> userItem = resp.item();
+	        if (userItem == null) return false;
+	        userItem.remove("cart"); // remove attribute
+	        dynamo.putItem(builder -> builder.tableName(USERS_TABLE).item(userItem));
+	        return true;
+	    } catch (DynamoDbException e) {
+	        e.printStackTrace();
+	    }
+	    return false;
+	}
+
 }
