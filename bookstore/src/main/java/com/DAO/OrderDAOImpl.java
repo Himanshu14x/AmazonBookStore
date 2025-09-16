@@ -14,7 +14,7 @@ import java.util.*;
 
 public class OrderDAOImpl implements OrderDAO {
     private DynamoDbClient dynamo;
-    private final String ORDERS_TABLE = "orders";
+    private final String ORDERS_TABLE = "amazonOrders";
     public OrderDAOImpl(DynamoDbClient dynamo) { this.dynamo = dynamo; }
 
     @Override
@@ -26,6 +26,14 @@ public class OrderDAOImpl implements OrderDAO {
             item.put("createdAt", AttributeValue.builder().s(o.getCreatedAt()).build());
             item.put("status", AttributeValue.builder().s(o.getStatus()).build());
             item.put("total", AttributeValue.builder().n(Double.toString(o.getTotal())).build());
+
+            // shipping/contact fields (if present)
+            if (o.getPhoneNumber() != null) item.put("phoneNumber", AttributeValue.builder().s(o.getPhoneNumber()).build());
+            if (o.getAddress() != null) item.put("address", AttributeValue.builder().s(o.getAddress()).build());
+            if (o.getLandmark() != null) item.put("landmark", AttributeValue.builder().s(o.getLandmark()).build());
+            if (o.getCity() != null) item.put("city", AttributeValue.builder().s(o.getCity()).build());
+            if (o.getPincode() != null) item.put("pincode", AttributeValue.builder().s(o.getPincode()).build());
+            if (o.getPaymentMethod() != null) item.put("paymentMethod", AttributeValue.builder().s(o.getPaymentMethod()).build());
 
             // items as a list of maps
             List<AttributeValue> items = new ArrayList<>();
@@ -48,6 +56,7 @@ public class OrderDAOImpl implements OrderDAO {
         }
         return false;
     }
+
 
     @Override
     public List<Order> getOrdersByEmail(String email) {
@@ -100,6 +109,8 @@ public class OrderDAOImpl implements OrderDAO {
         if (item.containsKey("total")) {
             try { o.setTotal(Double.parseDouble(item.get("total").n())); } catch (Exception ignored) {}
         }
+        if (item.containsKey("paymentMethod"))o.setPaymentMethod(item.get("paymentMethod").s());
+        
         if (item.containsKey("items")) {
             List<Map<String, String>> list = new ArrayList<>();
             for (AttributeValue av : item.get("items").l()) {

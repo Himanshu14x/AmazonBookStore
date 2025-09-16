@@ -7,7 +7,7 @@
 	<div class="row align-items-center">
 		<!-- Left: Logo -->
 		<div class="col-md-3 d-flex align-items-center">
-			<a href="<%=request.getContextPath()%>/"> <img
+			<a href=""> <img
 				src="<%=request.getContextPath()%>/assets/images/logo.png"
 				alt="Ebook Logo"
 				style="height: 50px; width: auto; margin-right: 10px;">
@@ -15,19 +15,10 @@
 		</div>
 
 
-		<!-- Middle: Search -->
-		<div class="col-md-6">
-			<form class="d-flex">
-				<input class="form-control search-input" type="search"
-					placeholder="Search books, authors..." aria-label="Search">
-				<button class="btn search-btn" type="submit">
-					<i class="fas fa-search"></i>
-				</button>
-			</form>
-		</div>
+	
 
 
-		<div class="col-md-3 text-md-right mt-2 mt-md-0">
+		<div class="col-md-3 ml-md-auto mt-2 mt-md-0 text-right">
 
 
 			<c:if test="${not empty userobj}">

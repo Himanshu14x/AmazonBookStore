@@ -12,7 +12,9 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Insert title here</title>
+<title>Recent Books</title>
+<link rel="icon" type="image/png"
+	href="<%=request.getContextPath()%>/assets/images/icon.png" />
 <link rel="icon" type="image/png"
 	href="<%=request.getContextPath()%>/assets/images/icon.png" />
 <%@include file="all_component/allCss.jsp"%>
@@ -31,7 +33,7 @@
 	<c:redirect url="../login.jsp"/>
 	
 	</c:if>
-	<h3 class="text-center">Books recently viewed by you</h3>
+	<h3 class="text-center mt-3">Books recently viewed by you</h3>
 	<table class="table table-striped">
 		<thead class="bg-primary text-white">
 			<tr>

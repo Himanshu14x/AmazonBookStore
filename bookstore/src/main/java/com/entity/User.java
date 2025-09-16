@@ -6,6 +6,7 @@ public class User {
 	private String name;
 	private String email;
 	private String password;
+	private String phoneNumber;
 	private String address;
 	private String landmark;
 	private String city;
@@ -68,6 +69,17 @@ public class User {
 		this.pincode = pincode;
 	}
 	
+	
+	public String getPhoneNumber() {
+		return phoneNumber;
+	}
+
+
+	public void setPhoneNumber(String phoneNumber) {
+		this.phoneNumber = phoneNumber;
+	}
+
+
 	@Override
 	public String toString() {
 		return "User [id=" + id + ", name=" + name + ", email=" + email + ", password=" + password + ", address="

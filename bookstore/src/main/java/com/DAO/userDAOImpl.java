@@ -1,15 +1,17 @@
 package com.DAO;
 
 import com.entity.User;
+import software.amazon.awssdk.services.dynamodb.model.PutItemResponse;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException;
 import software.amazon.awssdk.services.dynamodb.model.PutItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.GetItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.ScanRequest;
 import software.amazon.awssdk.services.dynamodb.model.ScanResponse;
 import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
 import software.amazon.awssdk.services.dynamodb.model.GetItemResponse;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+
 import software.amazon.awssdk.services.dynamodb.model.UpdateItemRequest;
 
 import java.util.HashMap;
@@ -29,29 +31,40 @@ public class userDAOImpl implements userDAO{
 
 	@Override
 	public boolean userRegister(User user) {
-		try {
-			Map<String, AttributeValue> item = new HashMap<>();
-			
-			item.put("email", AttributeValue.builder().s(user.getEmail()).build());
-			item.put("name", AttributeValue.builder().s(user.getName()).build());
-			item.put("password", AttributeValue.builder().s(user.getPassword()).build());
-			if (user.getAddress() != null)
-				item.put("address", AttributeValue.builder().s(user.getAddress()).build());
-			if (user.getLandmark() != null)
-				item.put("landmark", AttributeValue.builder().s(user.getLandmark()).build());
-			if (user.getCity() != null)
-				item.put("city", AttributeValue.builder().s(user.getCity()).build());
-			if (user.getPincode() != null)
-				item.put("pincode", AttributeValue.builder().s(user.getPincode()).build());
+	    try {
+	        Map<String, AttributeValue> item = new HashMap<>();
+	        
+	        item.put("email", AttributeValue.builder().s(user.getEmail()).build());
+	        item.put("name", AttributeValue.builder().s(user.getName() == null ? "" : user.getName()).build());
+	        item.put("password", AttributeValue.builder().s(user.getPassword()).build());
+	        if (user.getAddress() != null)
+	            item.put("address", AttributeValue.builder().s(user.getAddress()).build());
+	        if (user.getLandmark() != null)
+	            item.put("landmark", AttributeValue.builder().s(user.getLandmark()).build());
+	        if (user.getCity() != null)
+	            item.put("city", AttributeValue.builder().s(user.getCity()).build());
+	        if (user.getPincode() != null)
+	            item.put("pincode", AttributeValue.builder().s(user.getPincode()).build());
 
-			PutItemRequest request = PutItemRequest.builder().tableName(USERS_TABLE).item(item).build();
-			dynamo.putItem(request);
-			return true;
-		} catch (DynamoDbException e) {
-			e.printStackTrace();
-			return false;
-		}
+	        // IMPORTANT: only create the item if an item with this email does NOT already exist
+	        PutItemRequest request = PutItemRequest.builder()
+	                .tableName(USERS_TABLE)
+	                .item(item)
+	                .conditionExpression("attribute_not_exists(email)")
+	                .build();
+
+	        dynamo.putItem(request);
+	        return true;
+	    } catch (ConditionalCheckFailedException ccfe) {
+	        // This means item already existed (so do NOT overwrite)
+	        System.out.println("[userDAOImpl] userRegister failed - user already exists: " + (user != null ? user.getEmail() : "null"));
+	        return false;
+	    } catch (DynamoDbException e) {
+	        e.printStackTrace();
+	        return false;
+	    }
 	}
+
 
 	@Override
 	public User login(String email, String password) {
@@ -192,74 +205,38 @@ public class userDAOImpl implements userDAO{
 	    }
 	    return false;
 	}
-
-
-	// -- cart methods: getCart stored as a map of bookId -> quantity (numbers stored as strings here)
-	public Map<String, String> getCart(String email) {
+	
+	/**
+	 * Fetches a user by email (returns User object or null if not found).
+	 */
+	public User getUserByEmail(String email) {
+	    if (email == null || email.trim().isEmpty()) return null;
 	    try {
 	        Map<String, AttributeValue> key = new HashMap<>();
 	        key.put("email", AttributeValue.builder().s(email).build());
-	        GetItemResponse resp = dynamo.getItem(GetItemRequest.builder().tableName(USERS_TABLE).key(key).build());
-	        if (resp.hasItem() && resp.item().containsKey("cart")) {
-	            Map<String, AttributeValue> avalmap = resp.item().get("cart").m();
-	            Map<String, String> out = new HashMap<>();
-	            for (Map.Entry<String, AttributeValue> e : avalmap.entrySet()) {
-	                out.put(e.getKey(), e.getValue().n()); // using number as string
-	            }
-	            return out;
-	        }
+
+	        GetItemRequest request = GetItemRequest.builder().tableName(USERS_TABLE).key(key).build();
+	        GetItemResponse resp = dynamo.getItem(request);
+	        Map<String, AttributeValue> returned = resp.item();
+	        if (returned == null || returned.isEmpty()) return null;
+
+	        User u = new User();
+	        u.setEmail(email);
+	        u.setName(returned.containsKey("name") ? returned.get("name").s() : null);
+	        u.setPassword(returned.containsKey("password") ? returned.get("password").s() : null);
+	        u.setAddress(returned.containsKey("address") ? returned.get("address").s() : null);
+	        u.setLandmark(returned.containsKey("landmark") ? returned.get("landmark").s() : null);
+	        u.setCity(returned.containsKey("city") ? returned.get("city").s() : null);
+	        u.setPincode(returned.containsKey("pincode") ? returned.get("pincode").s() : null);
+
+	        return u;
 	    } catch (DynamoDbException e) {
 	        e.printStackTrace();
+	        return null;
 	    }
-	    return new HashMap<>();
 	}
 
-	// add or increment quantity for bookId in cart
-	public boolean addToCart(String email, String bookId, int qtyToAdd) {
-	    try {
-	        Map<String, String> cart = getCart(email);
-	        int currentQty = 0;
-	        if (cart.containsKey(bookId)) {
-	            try { currentQty = Integer.parseInt(cart.get(bookId)); } catch (Exception ignored) {}
-	        }
-	        cart.put(bookId, Integer.toString(currentQty + qtyToAdd));
 
-	        // convert to AttributeValue map
-	        Map<String, AttributeValue> m = new HashMap<>();
-	        for (Map.Entry<String, String> e : cart.entrySet()) {
-	            m.put(e.getKey(), AttributeValue.builder().n(e.getValue()).build());
-	        }
 
-	        // fetch full user item, update cart, put
-	        Map<String, AttributeValue> key = new HashMap<>();
-	        key.put("email", AttributeValue.builder().s(email).build());
-	        GetItemResponse resp = dynamo.getItem(GetItemRequest.builder().tableName(USERS_TABLE).key(key).build());
-	        Map<String, AttributeValue> userItem = resp.item();
-	     
-	        userItem.put("cart", AttributeValue.builder().m(m).build());
-	        dynamo.putItem(builder -> builder.tableName(USERS_TABLE).item(userItem));
-	        return true;
-	    } catch (DynamoDbException e) {
-	        e.printStackTrace();
-	    }
-	    return false;
-	}
-
-	// clear cart on order placed
-	public boolean clearCart(String email) {
-	    try {
-	        Map<String, AttributeValue> key = new HashMap<>();
-	        key.put("email", AttributeValue.builder().s(email).build());
-	        GetItemResponse resp = dynamo.getItem(GetItemRequest.builder().tableName(USERS_TABLE).key(key).build());
-	        Map<String, AttributeValue> userItem = resp.item();
-	        if (userItem == null) return false;
-	        userItem.remove("cart"); // remove attribute
-	        dynamo.putItem(builder -> builder.tableName(USERS_TABLE).item(userItem));
-	        return true;
-	    } catch (DynamoDbException e) {
-	        e.printStackTrace();
-	    }
-	    return false;
-	}
-
+	
 }

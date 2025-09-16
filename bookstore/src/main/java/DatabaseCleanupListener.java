@@ -7,7 +7,7 @@ import com.DB.DynamoDBClientProvider;
 /**
  * ServletContextListener that performs cleanup on web application shutdown.
  * For this project we close the DynamoDbClient created by DynamoDBClientProvider.
- * Removed MySQL / JDBC specific cleanup because this app uses DynamoDB now.
+ 
  */
 @WebListener
 public class DatabaseCleanupListener implements ServletContextListener {

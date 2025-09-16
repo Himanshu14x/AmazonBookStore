@@ -27,26 +27,34 @@ public class registerServlet extends HttpServlet {
         try {
             String name = req.getParameter("name");
             String email = req.getParameter("email");
-          
             String password = req.getParameter("password");
 
             User user = new User();
             user.setName(name);
             user.setEmail(email);
-  
             user.setPassword(password);
 
             userDAOImpl dao = new userDAOImpl(DynamoDBClientProvider.getClient());
-            boolean success = dao.userRegister(user);
 
             HttpSession session = req.getSession();
-            if (success) {
-                session.setAttribute("successMessage", "Registration successful!");
-            } else {
-                session.setAttribute("errorMessage", "Registration failed. Please try again.");
+
+            // Quick check: if user already exists, show a friendly message and do NOT overwrite
+            User existing = dao.getUserByEmail(email);
+            if (existing != null) {
+                session.setAttribute("errorMessage", "User already exists with this email. Please login or use a different email.");
+                resp.sendRedirect(req.getContextPath() + "/register.jsp");
+                return;
             }
 
-            // IMPORTANT: redirect and stop — do NOT forward or write after redirect
+            boolean success = dao.userRegister(user);
+
+            if (success) {
+                session.setAttribute("successMessage", "Registration successful! Please login.");
+            } else {
+                // If false, it could be because user existed (race) or some other failure
+                session.setAttribute("errorMessage", "Registration failed. User may already exist or server error occurred.");
+            }
+
             resp.sendRedirect(req.getContextPath() + "/register.jsp");
             return;
 
@@ -58,4 +66,5 @@ public class registerServlet extends HttpServlet {
             return;
         }
     }
+
 }

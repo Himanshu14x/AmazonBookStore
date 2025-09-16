@@ -6,6 +6,8 @@
 <meta charset="UTF-8">
 <title>Admin: Home</title>
 <link rel="icon" type="image/png" href="<%= request.getContextPath() %>/assets/images/icon.png" />
+
+
 <%@include file="/admin/allCss.jsp"%>
 
 <style type="text/css">

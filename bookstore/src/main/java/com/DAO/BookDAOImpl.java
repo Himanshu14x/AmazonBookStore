@@ -8,6 +8,8 @@ import software.amazon.awssdk.services.dynamodb.model.PutItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
 import software.amazon.awssdk.services.dynamodb.model.GetItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.GetItemResponse;
+import software.amazon.awssdk.services.dynamodb.model.ScanRequest;
+import software.amazon.awssdk.services.dynamodb.model.ScanResponse;
 import java.time.Instant;
 import java.util.List;
 import java.util.ArrayList;
@@ -276,7 +278,41 @@ public class BookDAOImpl implements BookDAO {
 	}
 
 
-	
+	public List<com.entity.BookDetails> searchBooks(String q) {
+	    List<com.entity.BookDetails> out = new ArrayList<>();
+	    if (q == null) return out;
+	    String qLower = q.trim().toLowerCase();
+	    if (qLower.isEmpty()) return out;
+
+	    try {
+	        ScanRequest scanReq = ScanRequest.builder().tableName(BOOKS_TABLE).build(); 
+	        ScanResponse resp = dynamo.scan(scanReq);
+
+	        for (Map<String, AttributeValue> item : resp.items()) {
+	            // convert item -> BookDetails
+	            com.entity.BookDetails b = new com.entity.BookDetails();
+	            if (item.containsKey("bookId")) b.setId(item.get("bookId").s());
+	            if (item.containsKey("title")) b.setTitle(item.get("title").s());
+	            if (item.containsKey("author")) b.setAuthor(item.get("author").s());
+	            if (item.containsKey("genre")) b.setGenre(item.get("genre").s());
+	            if (item.containsKey("photo")) b.setPhoto(item.get("photo").s());
+	            if (item.containsKey("price")) b.setPrice(item.get("price").s());
+	            if(item.containsKey("rating")) b.setRating(item.get("rating").s());
+
+	            // now case-insensitive contains check on title OR author OR genre
+	            String title = b.getTitle() != null ? b.getTitle().toLowerCase() : "";
+	            String author = b.getAuthor() != null ? b.getAuthor().toLowerCase() : "";
+	            String genre = b.getGenre() != null ? b.getGenre().toLowerCase() : "";
+
+	            if (title.contains(qLower) || author.contains(qLower) || genre.contains(qLower)) {
+	                out.add(b);
+	            }
+	        }
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    }
+	    return out;
+	}
 	
 	
 	

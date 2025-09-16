@@ -12,7 +12,9 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Book - Bookstore</title>
+  <title>Book Details</title>
+  <link rel="icon" type="image/png"
+	href="<%=request.getContextPath()%>/assets/images/icon.png" />
   <%@ include file="all_component/allCss.jsp" %>
   <style>
     /* (same CSS as before, omitted for brevity) */
@@ -180,7 +182,7 @@
 
             <!-- Add to cart form -->
             <form action="<%= request.getContextPath() %>/cart/add" method="post" class="mb-2">
-              <input type="hidden" name="productId" value="<%= b.getId() %>" />
+              <input type="hidden" name="bookId" value="<%= b.getId() %>" />
               <input type="hidden" name="title" value="<%= b.getTitle() %>" />
               <input type="hidden" name="price" value="<%= b.getPrice() %>" />
               <input type="hidden" name="photo" value="<%= b.getPhoto() %>" />
@@ -236,7 +238,7 @@
     %>
   </div>
 
-  <%@ include file="all_component/footer.jsp" %>
+  
 
   <script>
     (function(){
@@ -248,5 +250,7 @@
       });
     })();
   </script>
+  
+  <%@include file="all_component/footer.jsp" %>
 </body>
 </html>

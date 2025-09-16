@@ -14,9 +14,10 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Admin: All Books</title>
+<title>All Books</title>
 <link rel="icon" type="image/png"
 	href="<%=request.getContextPath()%>/assets/images/icon.png" />
+
 <%@include file="all_component/allCss.jsp"%>
 
 </head>
@@ -66,13 +67,14 @@
 				<td>
 
 <div class="btn-group btn-group-sm" role="group">
-              <form action="cart/add" method="post" style="display:inline;">
-                <input type="hidden" name="productId" value="1">
-                <input type="hidden" name="qty" value="1">
-                <button type="submit" class="btn btn-success btn-sm">
-                  <i class="fa fa-shopping-cart"></i> Add
-                </button>
-              </form>
+              	<form action="<%=request.getContextPath()%>/cart/add"
+									method="post" style="display: inline;">
+									<input type="hidden" name="bookId" value="<%=b.getId()%>">
+									<input type="hidden" name="qty" value="1">
+									<button type="submit" class="btn btn-success btn-sm">
+										<i class="fa fa-shopping-cart"></i> Add
+									</button>
+								</form>
               <a class="btn btn-outline-secondary btn-sm" href="view_books.jsp?bid=<%=b.getId()%>">View</a>
             </div>
 
