@@ -2,9 +2,8 @@ pipeline {
   agent any
 
   environment {
-    // these tool names must match the ones you configure under "Global Tool Configuration"
-    MAVEN_TOOL = 'Maven-4.0.0'    // change to your Maven tool name
-    JDK_TOOL   = 'JDK21'          // change to your JDK tool name
+    MAVEN_TOOL = 'Maven-3.8.8'   // <<--- change to the exact Maven name in Manage Jenkins -> Global Tool Configuration
+    JDK_TOOL   = 'JDK11'         // <<--- change to your JDK tool name
   }
 
   tools {
@@ -12,6 +11,10 @@ pipeline {
     jdk "${env.JDK_TOOL}"
   }
 
+  options {
+    buildDiscarder(logRotator(numToKeepStr: '10'))
+    timestamps()
+  }
 
   stages {
     stage('Checkout') {
@@ -22,8 +25,7 @@ pipeline {
 
     stage('Prepare') {
       steps {
-        echo "Java: ${tool name: env.JDK_TOOL, type: 'jdk'}"
-        echo "Maven: ${tool name: env.MAVEN_TOOL, type: 'maven'}"
+        echo "Using JDK: ${env.JDK_TOOL}, Maven: ${env.MAVEN_TOOL}"
         sh 'java -version'
         sh 'mvn -version'
       }
@@ -31,21 +33,18 @@ pipeline {
 
     stage('Build & Test') {
       steps {
-        // -B non-interactive, -V print versions. Runs surefire tests.
         sh 'mvn -B -V clean test'
       }
     }
 
     stage('Package') {
       steps {
-        // package; if you want to skip tests here, use -DskipTests=true (not recommended)
         sh 'mvn -B -V package'
       }
     }
 
-    stage('Archive') {
+    stage('Archive Artifact') {
       steps {
-        // archive the produced artifact(s); adjust pattern to match your packaging (jar/war)
         archiveArtifacts artifacts: 'target/*.jar, target/*.war', fingerprint: true, allowEmptyArchive: false
       }
     }
@@ -53,21 +52,21 @@ pipeline {
 
   post {
     always {
-      // publish JUnit test reports (Surefire creates these)
-      junit 'target/surefire-reports/*.xml'
-      // optional: publish maven logs
-      archiveArtifacts artifacts: 'target/surefire-reports/**', allowEmptyArchive: true
-
+      // run junit and artifact archiving inside a node so they have a Launcher/Workspace
       script {
-        // mark build unstable if tests failed (Jenkins does this via junit, but fine to log)
-        echo "Build finished: ${currentBuild.currentResult}"
+        // allocate a node so steps that need a launcher run properly
+        node {
+          // publish unit test results
+          junit 'target/surefire-reports/*.xml'
+
+          // keep test reports archived as well (optional)
+          archiveArtifacts artifacts: 'target/surefire-reports/**', allowEmptyArchive: true
+        }
       }
     }
-
     success {
       echo 'Build succeeded — artifact archived.'
     }
-
     failure {
       echo 'Build failed — check console output and JUnit results.'
     }
