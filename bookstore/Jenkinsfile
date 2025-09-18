@@ -1,41 +1,30 @@
 pipeline {
   agent any
+  options { timestamps() }
 
   environment {
-    // <-- CHANGE these to the exact tool names configured in Manage Jenkins -> Global Tool Configuration
-    MAVEN_TOOL = 'maven-3.9'
-    JDK_TOOL   = 'jdk21'
+    MAVEN_TOOL = 'maven-3.9'   // <-- must match Manage Jenkins -> Global Tool Configuration Name
+    JDK_TOOL   = 'jdk21'       // <-- change if different
+    PROJECT_DIR = 'bookstore'  // <-- the subfolder that contains pom.xml
   }
 
   tools {
-    // ensures tools are available on the agent (these names must exist in Jenkins)
     maven "${env.MAVEN_TOOL}"
     jdk "${env.JDK_TOOL}"
   }
 
-  options {
-    buildDiscarder(logRotator(numToKeepStr: '10'))
-    timestamps()
-  }
-
   stages {
     stage('Checkout') {
-      steps {
-        checkout scm
-      }
+      steps { checkout scm }
     }
 
     stage('Prepare') {
       steps {
         script {
-          // Resolve tool installation path so we can run mvn on Windows or Linux
           mvnHome = tool env.MAVEN_TOOL
+          javaHome = tool env.JDK_TOOL
           echo "Maven home: ${mvnHome}"
-          echo "Java home: ${tool env.JDK_TOOL}"
-        }
-
-        // print versions in platform-appropriate way
-        script {
+          echo "Java home: ${javaHome}"
           if (isUnix()) {
             sh "${mvnHome}/bin/mvn -v"
           } else {
@@ -49,9 +38,13 @@ pipeline {
       steps {
         script {
           if (isUnix()) {
-            sh "${mvnHome}/bin/mvn -B -V clean test"
+            dir(env.PROJECT_DIR) {
+              sh "${mvnHome}/bin/mvn -B -V clean test"
+            }
           } else {
-            bat "\"${mvnHome}\\bin\\mvn\" -B -V clean test"
+            dir(env.PROJECT_DIR) {
+              bat "\"${mvnHome}\\bin\\mvn\" -B -V clean test"
+            }
           }
         }
       }
@@ -61,9 +54,13 @@ pipeline {
       steps {
         script {
           if (isUnix()) {
-            sh "${mvnHome}/bin/mvn -B -V package"
+            dir(env.PROJECT_DIR) {
+              sh "${mvnHome}/bin/mvn -B -V package"
+            }
           } else {
-            bat "\"${mvnHome}\\bin\\mvn\" -B -V package"
+            dir(env.PROJECT_DIR) {
+              bat "\"${mvnHome}\\bin\\mvn\" -B -V package"
+            }
           }
         }
       }
@@ -72,30 +69,10 @@ pipeline {
     stage('Archive Artifact') {
       steps {
         script {
-          // archive artifact(s) if they exist
-          def artifacts = []
-          if (fileExists('target')) {
-            // common WAR/JAR names
-            def war = sh(script: 'ls target/*.war 2>/dev/null || true', returnStdout: true).trim()
-            def jar = sh(script: 'ls target/*.jar 2>/dev/null || true', returnStdout: true).trim()
-            if (war) artifacts.addAll(war.split("\\s+"))
-            if (jar) artifacts.addAll(jar.split("\\s+"))
-          }
-
-          // If using Windows agent, use bat + dir
-          if (!isUnix()) {
-            def warList = bat(returnStdout:true, script: 'dir /b target\\*.war 2>nul || echo').trim()
-            def jarList = bat(returnStdout:true, script: 'dir /b target\\*.jar 2>nul || echo').trim()
-            if (warList) artifacts.addAll(warList.split("\\r?\\n"))
-            if (jarList) artifacts.addAll(jarList.split("\\r?\\n"))
-          }
-
-          if (artifacts.size() > 0) {
-            echo "Archiving: ${artifacts}"
-            archiveArtifacts artifacts: 'target/*.jar, target/*.war', fingerprint: true, allowEmptyArchive: false
-          } else {
-            echo "No artifact found to archive."
-          }
+          // archive artifacts from the submodule's target dir
+          def pattern = "${env.PROJECT_DIR}/target/*.war, ${env.PROJECT_DIR}/target/*.jar"
+          echo "Archiving: ${pattern}"
+          archiveArtifacts artifacts: pattern, allowEmptyArchive: true
         }
       }
     }
@@ -104,21 +81,19 @@ pipeline {
   post {
     always {
       script {
-        // Run junit inside a node context so Launcher exists and make it tolerant to missing files
         node {
-          echo "Publishing JUnit results (allow empty results)..."
-          junit testResults: 'target/surefire-reports/*.xml', allowEmptyResults: true
+          // publish JUnit results from project dir (tolerant to missing)
+          junit testResults: "${env.PROJECT_DIR}/target/surefire-reports/*.xml", allowEmptyResults: true
 
-          // archive test reports optionally
-          if (fileExists('target/surefire-reports')) {
-            archiveArtifacts artifacts: 'target/surefire-reports/**', allowEmptyArchive: true
+          // optionally archive surefire reports
+          if (fileExists("${env.PROJECT_DIR}/target/surefire-reports")) {
+            archiveArtifacts artifacts: "${env.PROJECT_DIR}/target/surefire-reports/**", allowEmptyArchive: true
           } else {
-            echo "No surefire-reports found to archive."
+            echo "No surefire-reports found under ${env.PROJECT_DIR}/target"
           }
         }
       }
     }
-
     success { echo 'Build succeeded.' }
     failure { echo 'Build failed — check console output.' }
   }
