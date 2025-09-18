@@ -1,10 +1,17 @@
 pipeline {
   agent any
 
- tools {
-		jdk 'jdk21'
-        maven 'maven-3.9'
-    }
+  environment {
+    // <-- CHANGE these to the exact tool names configured in Manage Jenkins -> Global Tool Configuration
+    MAVEN_TOOL = 'maven-3.9'
+    JDK_TOOL   = 'jdk21'
+  }
+
+  tools {
+    // ensures tools are available on the agent (these names must exist in Jenkins)
+    maven "${env.MAVEN_TOOL}"
+    jdk "${env.JDK_TOOL}"
+  }
 
   options {
     buildDiscarder(logRotator(numToKeepStr: '10'))
