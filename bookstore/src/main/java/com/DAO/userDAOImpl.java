@@ -1,7 +1,7 @@
 package com.DAO;
 
 import com.entity.User;
-import software.amazon.awssdk.services.dynamodb.model.PutItemResponse;
+
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException;
@@ -12,7 +12,7 @@ import software.amazon.awssdk.services.dynamodb.model.ScanResponse;
 import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
 import software.amazon.awssdk.services.dynamodb.model.GetItemResponse;
 
-import software.amazon.awssdk.services.dynamodb.model.UpdateItemRequest;
+
 
 import java.util.HashMap;
 import java.util.Map;

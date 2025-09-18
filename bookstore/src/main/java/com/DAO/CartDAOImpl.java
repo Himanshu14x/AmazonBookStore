@@ -3,7 +3,7 @@ package com.DAO;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.*;
 import java.util.*;
-import java.util.stream.Collectors;
+
 
 /**
  * CartDAOImpl - DynamoDB-backed implementation of CartDAO.

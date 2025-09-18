@@ -1,0 +1,82 @@
+pipeline {
+  agent any
+
+  environment {
+    // these tool names must match the ones you configure under "Global Tool Configuration"
+    MAVEN_TOOL = 'Maven-4.0.0'    // change to your Maven tool name
+    JDK_TOOL   = 'JDK21'          // change to your JDK tool name
+  }
+
+  tools {
+    maven "${env.MAVEN_TOOL}"
+    jdk "${env.JDK_TOOL}"
+  }
+
+  options {
+    // keep only last 10 builds
+    buildDiscarder(logRotator(numToKeepStr: '10'))
+    // fail fast on stage failure
+    ansiColor('xterm')
+    timestamps()
+  }
+
+  stages {
+    stage('Checkout') {
+      steps {
+        checkout scm
+      }
+    }
+
+    stage('Prepare') {
+      steps {
+        echo "Java: ${tool name: env.JDK_TOOL, type: 'jdk'}"
+        echo "Maven: ${tool name: env.MAVEN_TOOL, type: 'maven'}"
+        sh 'java -version'
+        sh 'mvn -version'
+      }
+    }
+
+    stage('Build & Test') {
+      steps {
+        // -B non-interactive, -V print versions. Runs surefire tests.
+        sh 'mvn -B -V clean test'
+      }
+    }
+
+    stage('Package') {
+      steps {
+        // package; if you want to skip tests here, use -DskipTests=true (not recommended)
+        sh 'mvn -B -V package'
+      }
+    }
+
+    stage('Archive') {
+      steps {
+        // archive the produced artifact(s); adjust pattern to match your packaging (jar/war)
+        archiveArtifacts artifacts: 'target/*.jar, target/*.war', fingerprint: true, allowEmptyArchive: false
+      }
+    }
+  }
+
+  post {
+    always {
+      // publish JUnit test reports (Surefire creates these)
+      junit 'target/surefire-reports/*.xml'
+      // optional: publish maven logs
+      archiveArtifacts artifacts: 'target/surefire-reports/**', allowEmptyArchive: true
+
+      script {
+        // mark build unstable if tests failed (Jenkins does this via junit, but fine to log)
+        echo "Build finished: ${currentBuild.currentResult}"
+      }
+    }
+
+    success {
+      echo 'Build succeeded — artifact archived.'
+    }
+
+    failure {
+      echo 'Build failed — check console output and JUnit results.'
+    }
+  }
+}
