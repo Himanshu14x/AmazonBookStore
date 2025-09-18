@@ -58,7 +58,7 @@
         DynamoDbClient client = DynamoDBClientProvider.getClient();
         com.DAO.BookDAOImpl bookDao = new com.DAO.BookDAOImpl(client);
         if (b != null && b.getGenre() != null && !b.getGenre().trim().isEmpty()) {
-            recs = bookDao.getRecommendedByGenre(b.getGenre(), 4.0, 5);
+            recs = bookDao.getRecommendedByGenre(b.getGenre(), 4.0, 5, b.getId());
         }
     } catch (Exception e) {
         e.printStackTrace();

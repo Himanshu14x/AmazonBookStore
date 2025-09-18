@@ -93,7 +93,40 @@
 
   </dependencies>
 
+  
   <build>
-    <finalName>bookstore</finalName>
-  </build>
+  <finalName>bookstore</finalName>
+
+  <!-- specify encoding and compiler defaults -->
+  <plugins>
+    <!-- Compiler plugin: use Java 11 bytecode (release 11). Change to 17 if your target server supports it. -->
+    <plugin>
+      <groupId>org.apache.maven.plugins</groupId>
+      <artifactId>maven-compiler-plugin</artifactId>
+      <version>3.11.0</version>
+      <configuration>
+        <!-- compile with release to avoid source/target mismatch warnings on JDK 21 -->
+        <release>11</release>
+        <compilerArgs>
+          <!-- suppress the 'obsolete options' warning if you still see it -->
+          <arg>-Xlint:-options</arg>
+        </compilerArgs>
+      </configuration>
+    </plugin>
+
+  
+    
+  </plugins>
+</build>
+
+<!-- set project properties for encoding and compiler fallback -->
+<properties>
+  <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+  <!-- keep in sync with maven-compiler-plugin <release> above -->
+  <maven.compiler.release>11</maven.compiler.release>
+</properties>
+
+  
+  
 </project>
